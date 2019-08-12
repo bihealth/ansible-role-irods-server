@@ -1,0 +1,34 @@
+---
+
+- name: restart irods
+  systemd: name=irods state=restarted
+
+- name: authenticate as rods user
+  shell: |
+    set -eo pipefail
+    echo rods | iinit
+    touch /root/.install-rods-authenticated
+  args:
+    executable: /bin/bash
+    creates: /root/.install-rods-authenticated
+
+- name: set the password for the native auto rods user
+  shell: |
+    set -e
+    iadmin moduser rods password "{{ irods_rods_password }}"
+    touch /root/.install-rods-pwchanged
+  args:
+    executable: /bin/bash
+    creates: /root/.install-rods-pwchanged
+  no_log: true
+
+- name: create the anonymous user
+  shell: |
+    set -e
+    iadmin mkuser anonymous
+    iadmin moduser anonymous password ""
+    touch /root/.install-anonymous-user-created
+  args:
+    executable: /bin/bash
+    creates: /root/.install-anonymous-user-created
+  when: irods_create_anonymous_user

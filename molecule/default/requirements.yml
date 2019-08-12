@@ -1,0 +1,12 @@
+---
+
+- name: bihealth.postgres_client
+  src: git+https://github.com/bihealth/ansible-role-postgres-client.git
+  version: "v0.1.0"
+
+- name: bihealth.ssl_certs
+  src: git+https://github.com/bihealth/ansible-role-ssl-certs.git
+  version: "v0.1.1"
+
+- src: geerlingguy.postgresql
+- src: pieterlexis.json_file

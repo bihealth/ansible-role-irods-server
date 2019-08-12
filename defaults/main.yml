@@ -1,0 +1,34 @@
+---
+
+# REQUIRED Settings -------------------------------------------------------------------------------
+
+# The iROD zone name.
+# irods_zone_name: null
+
+# The password salt.
+# irods_password_salt: null
+
+# The secret negotiation key (must have exactly 32 characters).
+# irods_negotiation_key: null
+
+# The zone key.
+# irods_zone_key: null
+
+# The control plane key (must have exactly 32 characters).
+# irods_control_plane_key: null
+
+# Password of the rods user.
+# irods_rods_password: null
+
+# Important Settings (you might want to override these) -------------------------------------------
+
+# Whether the server is a "provider" or a "resource" server.
+irods_role: provider
+
+# Whether or not to create the password-less anonymous user.
+irods_create_anonymous_user: false
+
+# Other Settings (the defaults are sensible for most cases) ---------------------------------------
+
+# Certificate name (via bihealth.ssl_certs).
+irods_cert_name: "{{ inventory_hostname }}"

@@ -1,0 +1,38 @@
+---
+
+- name: install apt prerequisites
+  apt:
+    name: apt-transport-https
+    state: present
+
+- name: install iRODS repo keys
+  apt_key:
+    id: 9014FF9F75C66C771F1CB574BD925DBDACF9B42B
+    url: https://packages.irods.org/irods-signing-key.asc
+    state: present
+
+- name: add apt source for iRODS
+  # NB: only xenial packages available as of Aug 13, could become
+  # $(lsb_release -sc || sed -e 's/stretch/xenial')
+  shell: |
+    set -eo pipefail
+    echo "deb [arch=amd64] https://packages.irods.org/apt/ xenial main" \
+    | tee /etc/apt/sources.list.d/renci-irods.list
+    apt-get update -qq
+  args:
+    executable: /bin/bash
+    creates: /etc/apt/sources.list.d/renci-irods.list
+  tags: [skip_ansible_lint]  # yes, I want wget here
+
+- name: install misc prerequisites
+  apt:
+    state: present
+    name:
+    - psmisc  # for killall after iRODS installation
+
+- name: install irods-server
+  yum:
+    state: present
+    name:
+    - irods-server
+    - irods-database-plugin-postgres
