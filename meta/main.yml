@@ -1,7 +1,7 @@
 ---
 
 galaxy_info:
-  role_name: bihealth.ansible-role-irods-server
+  role_name: irods_server
   author: Manuel Holtgrewe
   description: Setup of an iRODS catalogue or resource server.
   company: Core Unit Bioinformatics (CUBI), Berlin Institute of Health (BIH)
