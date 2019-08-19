@@ -1,6 +1,6 @@
 # Changelog
 
-## HEAD (unreleased)
+## v0.1.2
 
 - Fixing login after updating `rods` password on installation.
 - Fixing anonymous user creation.
