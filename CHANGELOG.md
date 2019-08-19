@@ -1,5 +1,10 @@
 # Changelog
 
+## HEAD (unreleased)
+
+- Fixing login after updating `rods` password on installation.
+- Fixing anonymous user creation.
+
 ## v0.1.1
 
 - Fixing CentOS => EL.

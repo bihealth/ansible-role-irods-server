@@ -108,6 +108,7 @@
     dest: /root/.irods/irods_environment.json
     mode: u=rw,go=
   notify:
-    - authenticate as rods user
+    - authenticate as rods user with default password
     - set the password for the native auto rods user
+    - authenticate as rods user with updated password
     - create the anonymous user
