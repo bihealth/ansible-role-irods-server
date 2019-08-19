@@ -3,7 +3,7 @@
 - name: restart irods
   systemd: name=irods state=restarted
 
-- name: authenticate as rods user
+- name: authenticate as rods user with default password
   shell: |
     set -eo pipefail
     echo rods | iinit
@@ -22,10 +22,19 @@
     creates: /root/.install-rods-pwchanged
   no_log: true
 
+- name: authenticate as rods user with updated password
+  shell: |
+    set -eo pipefail
+    echo "{{ irods_rods_password }}" | iinit
+    touch /root/.install-rods-authenticated2
+  args:
+    executable: /bin/bash
+    creates: /root/.install-rods-authenticated2
+
 - name: create the anonymous user
   shell: |
-    set -e
-    iadmin mkuser anonymous
+    set -ex
+    iadmin mkuser anonymous rodsuser
     iadmin moduser anonymous password ""
     touch /root/.install-anonymous-user-created
   args:
