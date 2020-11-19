@@ -1,0 +1,26 @@
+---
+
+- name: comment some lines
+  replace:
+    path: /etc/irods/core.re
+    regexp: '(^acPostProcFor.*\(\*leaf_resource\) \{\})'
+    replace: '# \1'
+
+- name: uncomment some lines
+  replace:
+    path: /etc/irods/core.re
+    regexp: '#\s*(acPostProcForPut \{msiSysChksumDataObj; \})$'
+    replace: '\1'
+
+# - name: calc free_space
+#   blockinfile:
+#     path: /etc/irods/core.re
+#     insertafter: '# acPostProcFor.*\(\*leaf_resource\) \{\}'
+#     block: |
+#       acPostProcForParallelTransferReceived(*leaf_resource) {
+#         msi_update_unixfilesystem_resource_free_space(*leaf_resource);
+#       }
+#       acPostProcForDataCopyReceived(*leaf_resource) {
+#         msi_update_unixfilesystem_resource_free_space(*leaf_resource);
+#       }
+#   when: "'resource_hosts' in group_names"

@@ -3,112 +3,17 @@
 - name: define distribution-specific variables
   include_vars: "{{ ansible_os_family }}.yml"
 
-- name: perform installation
-  include_tasks: install/{{ ansible_os_family }}.yml
+- name: install packages
+  import_tasks: install.yml
 
-- name: create server configuration template JSON file
-  template:
-    src: unattended_config.json.j2
-    dest: /root/unattended_config.json
-    mode: u=rw,go=
+- name: setup and configure irods
+  import_tasks: setup_irods.yml
 
-- name: setup irods from prefilled configuration JSON
-  shell:
-    if ! python /var/lib/irods/scripts/setup_irods.py --json_configuration_file=/root/unattended_config.json; then
-        rm -f /etc/irods/server_config.json;
-        exit 1;
-    fi
-  args:
-    creates: /etc/irods/server_config.json
-    executable: /bin/bash
-  register: setup_irods
+# - name: TODO -- what exactly does this do?
+#   import_tasks: change_core.re.yml
 
-- name: kill auto-started iRods server not running in systemd
-  shell: killall irodsServer irodsReServer && sleep 60s
-  register: result
-  failed_when: false
-  changed_when: not ('no such process' in result.stdout)
-  when: setup_irods.changed
-  tags: [skip_ansible_lint]  # yes, must be executed NOW
+# - import_tasks: transport_encryption.yml
+#   when: inventory_hostname == irods_icat_server
 
-- name: copy SSL certificate file
-  copy:
-    src: /etc/ssl/certs/{{ irods_cert_name }}.crt
-    dest: /etc/irods/irods_server.crt
-    remote_src: true
-    owner: irods
-    group: irods
-    mode: u=rw,go=r
-  notify:
-    - restart irods
-
-- name: copy SSL certificate key
-  copy:
-    src: /etc/ssl/private/{{ irods_cert_name }}.key
-    dest: /etc/irods/irods_server.key
-    remote_src: true
-    owner: irods
-    group: irods
-    mode: u=rw,go=
-  notify:
-    - restart irods
-
-- name: create diffie-hellman parameters
-  command: openssl dhparam -2 -out /etc/irods/dhparams.pem 2048
-  args:
-    creates: /etc/irods/dhparams.pem
-  notify:
-    - restart irods
-
-- name: fix /etc/irods/dhparams.pem permissions
-  file:
-    name: /etc/irods/dhparams.pem
-    state: file
-    owner: irods
-    group: irods
-    mode: u=rw,go=r
-  notify:
-    - restart irods
-
-- name: put certificates into default irods environment
-  json_file:
-    dest: /var/lib/irods/.irods/irods_environment.json
-    key: "{{ item.key }}"
-    value: /etc/irods/{{ item.value }}
-  loop:
-    - { key: 'irods_ssl_ca_certificate_file', value: 'irods_server.crt' }
-    - { key: 'irods_ssl_certificate_chain_file', value: 'irods_server.crt' }
-    - { key: 'irods_ssl_certificate_key_file', value: 'irods_server.key' }
-    - { key: 'irods_ssl_dh_params_file', value: 'dhparams.pem' }
-  notify:
-    - restart irods
-  tags: [skip_ansible_lint]  # cf. https://github.com/ansible/ansible-lint/issues/245
-
-# NOTE: This env is used by the local service account(s), PAM -> iRODS crash
-- name: set authentication method to "native" for default irods environment
-  json_file:
-    dest: /var/lib/irods/.irods/irods_environment.json
-    key: irods_authentication_scheme
-    value: native
-  notify:
-    - restart irods
-  tags: [skip_ansible_lint]  # cf. https://github.com/ansible/ansible-lint/issues/245
-
-- name: start and enable irods service
-  systemd: name=irods state=started enabled=true
-
-- name: create /root/.irods
-  file:
-    path: /root/.irods
-    state: directory
-
-- name: create irods environment JSON for root
-  template:
-    src: environment_root.json.j2
-    dest: /root/.irods/irods_environment.json
-    mode: u=rw,go=
-  notify:
-    - authenticate as rods user with default password
-    - set the password for the native auto rods user
-    - authenticate as rods user with updated password
-    - create the anonymous user
+# - import_tasks: transport_encryption.yml
+#   when: inventory_hostname != irods_icat_server

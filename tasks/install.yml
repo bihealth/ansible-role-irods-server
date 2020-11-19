@@ -1,0 +1,46 @@
+---
+
+- name: install prerequisites
+  yum:
+    state: present
+    name:
+      - patch
+
+- name: install EPEL repository
+  yum: name=epel-release state=present
+  when: >  # not for Fedora
+    ansible_distribution == 'CentOS' or
+    ansible_distribution == 'Red Hat Enterprise Linux'
+
+- name: install iRODS repo keys
+  command: rpm --import https://packages.irods.org/irods-signing-key.asc
+  args:
+    warn: 'false'
+  changed_when: false
+
+- name: register iRODS repository
+  get_url:
+    url: https://packages.irods.org/renci-irods.yum.repo
+    dest: /etc/yum.repos.d/renci-irods.yum.repo
+    checksum: "sha256:c91452420e28aa8ce72bea9e794338a09463df5ce51085aefe99d8eedac9d668"
+
+- name: install prerequisites
+  yum:
+    state: present
+    name:
+      - sudo
+
+- name: install irods-server
+  yum:
+    state: present
+    name:
+      - irods-runtime
+      - irods-icommands
+      - irods-server
+      - irods-database-plugin-postgres
+
+- name: patch to enable encryption icat <-> db
+  patch:
+    src: "database_connect.py.patch"
+    dest: "/var/lib/irods/scripts/irods/database_connect.py"
+  when: irods_encrypt_db_transport

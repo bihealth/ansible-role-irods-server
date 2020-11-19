@@ -1,5 +1,3 @@
----
-
 galaxy_info:
   role_name: irods_server
   author: Manuel Holtgrewe
@@ -28,4 +26,3 @@ galaxy_info:
 dependencies:
   - role: bihealth.ssl_certs
   - role: bihealth.postgres_client
-  - role: pieterlexis.json_file

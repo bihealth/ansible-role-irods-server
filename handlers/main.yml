@@ -1,35 +1,60 @@
 ---
 
+- name: pkill autostarted irods during installation
+  shell: pkill -x -c 'irods(Re)?Server' && sleep 60s
+  register: irods_server_pkill_result
+  failed_when: false
+  changed_when: not ('0' == irods_server_pkill_result.stdout)
+
 - name: restart irods
-  systemd: name=irods state=restarted
+  systemd:
+    name: irods
+    daemon_reload: true
+    state: restarted
+    enabled: true
 
 - name: authenticate as rods user with default password
   shell: |
     set -eo pipefail
     echo rods | iinit
-    touch /root/.install-rods-authenticated
+    touch /var/lib/irods/.install-rods-authenticated
+  become: yes
+  become_user: "irods"
   args:
     executable: /bin/bash
-    creates: /root/.install-rods-authenticated
+    creates: /var/lib/irods/.install-rods-authenticated
+  when: inventory_hostname == irods_icat_server
 
 - name: set the password for the native auto rods user
   shell: |
     set -e
     iadmin moduser rods password "{{ irods_rods_password }}"
-    touch /root/.install-rods-pwchanged
+    touch /var/lib/irods/.install-rods-pwchanged
+  become: yes
+  become_user: "irods"
   args:
     executable: /bin/bash
-    creates: /root/.install-rods-pwchanged
+    creates: /var/lib/irods/.install-rods-pwchanged
   no_log: true
+  when: inventory_hostname == irods_icat_server
 
 - name: authenticate as rods user with updated password
   shell: |
     set -eo pipefail
+    iexit full
     echo "{{ irods_rods_password }}" | iinit
-    touch /root/.install-rods-authenticated2
+    touch /var/lib/irods/.install-rods-{{ irods_server_item }}-authenticated2
+  become: yes
+  become_user: "{{ irods_server_item }}"
   args:
     executable: /bin/bash
-    creates: /root/.install-rods-authenticated2
+    creates: /var/lib/irods/.install-rods-{{ irods_server_item }}-authenticated2
+  loop:
+    - root
+    - rods
+  loop_control:
+    loop_var: irods_server_item
+  no_log: true
 
 - name: create the anonymous user
   shell: |

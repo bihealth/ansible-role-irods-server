@@ -1,0 +1,11 @@
+index b25304e..d98f0fd 100644
+--- a/scripts/irods/database_connect.py
++++ b/scripts/irods/database_connect.py
+@@ -70,6 +70,7 @@ def get_odbc_entry(db_config, catalog_database_type):
+             'Servername': db_config['db_host'],
+             'Port': str(db_config['db_port']),
+             'ReadOnly': 'No',
++            'SSLmode':'require',
+             'Ksqo': '0',
+             'RowVersioning': 'No',
+             'ShowSystemTables': 'No',

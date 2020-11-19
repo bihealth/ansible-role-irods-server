@@ -28,7 +28,20 @@ irods_role: provider
 # Whether or not to create the password-less anonymous user.
 irods_create_anonymous_user: false
 
+# Set to true for self-signed certificates.
+irods_cert_trues: false
+
 # Other Settings (the defaults are sensible for most cases) ---------------------------------------
 
 # Certificate name (via bihealth.ssl_certs).
+# TODO: what about unused irods_cert_name?!
 irods_cert_name: "{{ inventory_hostname }}"
+
+# Whether or not to encrypt transport to database.
+irods_encrypt_db_transport: true
+
+# The user in the operating system to run as.
+irods_account_user: irods
+
+# Value for irods_ssl_verify_server of service account config.
+irods_service_account_irods_ssl_verify_server: cert

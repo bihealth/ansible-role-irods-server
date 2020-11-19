@@ -1,7 +1,0 @@
----
-
-- src: bihealth.postgres_client
-- src: bihealth.ssl_certs
-- src: pieterlexis.json_file
-
-- src: geerlingguy.postgresql

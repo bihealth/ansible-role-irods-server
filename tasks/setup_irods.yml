@@ -1,0 +1,137 @@
+---
+
+- name: create irods system-group
+  group:
+    name: irods
+    gid: 993
+
+- name: create irods system-user
+  user:
+    name: irods
+    comment: iRODS Administrator
+    home: /var/lib/irods
+    group: irods
+    uid: 996
+    shell: /bin/bash
+
+- name: create server configuration template JSON file
+  template:
+    src: unattended_config.json.j2
+    dest: /root/unattended_config.json
+    mode: 0600
+    lstrip_blocks: 'yes'
+  vars:
+    ins_key: "{{ lookup('passwordstore', '{{ irods_ssl_key_passwordstore_path }} returnall=true' ) }}"
+    ins_crt: "{{ lookup('passwordstore', '{{ irods_ssl_cert_passwordstore_path }} returnall=true' ) }}"
+    ins_core_dvm: "{{lookup('file', 'core.dvm')}}"
+    ins_core_re: "{{lookup('file', 'core.re')}}"
+    ins_core_fnm: "{{lookup('file', 'core.fnm')}}"
+    ins_service_account_config: "{{lookup('file', 'service_account.config')}}"
+
+- name: copy SSL certificate file
+  copy:
+    content: "{{ lookup('passwordstore', '{{ irods_ssl_cert_passwordstore_path }} returnall=true' ) }}"
+    dest: /etc/irods/server.crt
+    owner: "{{ irods_account_user }}"
+    group: "{{ irods_account_user }}"
+    mode: 0640
+  notify:
+    - restart irods
+
+- name: copy SSL certificate key
+  copy:
+    content: "{{ lookup('passwordstore', '{{ irods_ssl_key_passwordstore_path }} returnall=true' ) }}"
+    dest: /etc/irods/server.key
+    owner: "{{ irods_account_user }}"
+    group: "{{ irods_account_user }}"
+    mode: 0600
+  notify:
+    - restart irods
+
+- name: setup irods from prefilled configuration JSON
+  shell: |
+     if ! python {{ _script }} --json_configuration_file={{ _config }};
+     then
+       rm -f /etc/irods/server_config.json;
+       exit 1;
+     fi
+  args:
+    creates: /etc/irods/server_config.json
+    executable: /bin/bash
+  vars:
+    _script: /var/lib/irods/scripts/setup_irods.py
+    _config: /root/unattended_config.json
+  notify: pkill autostarted irods during installation
+  register: setup_irods
+
+- name: flush handlers to pkill autostarted irods
+  meta: flush_handlers
+
+- name: transport encryption
+  lineinfile:
+    path: /etc/irods/core.re
+    regexp: '^(acPreConnect\(\*OUT\) { \*OUT=\").*(\"; })'
+    line: '\1CS_NEG_REQUIRE\2'
+    backrefs: 'yes'
+  notify:
+    - restart irods
+
+- name: pam configuration
+  copy:
+    src: files/irods.pam
+    dest: /etc/pam.d/irods
+    owner: root
+    group: root
+    mode: 0755
+
+- name: create diffie-hellman parameters
+  command: openssl dhparam -2 -out /etc/irods/dhparams.pem 2048
+  args:
+    creates: /etc/irods/dhparams.pem
+
+- name: fix /etc/irods/dhparams.pem permissions
+  file:
+    name: /etc/irods/dhparams.pem
+    state: file
+    owner: irods
+    group: irods
+    mode: u=rw,go=r
+  notify:
+    - restart irods
+
+- name: create /var/lib/irods/.irods
+  file:
+    path: /var/lib/irods/.irods
+    state: directory
+    owner: "{{ irods_account_user }}"
+    group: "{{ irods_account_user }}"
+    mode: 0755
+
+- name: create irods environment JSON for root
+  template:
+    src: environment.json.j2
+    dest: /var/lib/irods/.irods/irods_environment.json
+    owner: "{{ irods_account_user }}"
+    group: "{{ irods_account_user }}"
+    mode: 0644
+    lstrip_blocks: 'yes'
+- name: create /root/.irods
+  file:
+    path: /root/.irods
+    state: directory
+    owner: root
+    group: root
+    mode: 0600
+
+- name: create irods environment JSON for root
+  template:
+    src: environment_root.json.j2
+    dest: /root/.irods/irods_environment.json
+    owner: root
+    group: root
+    mode: 0600
+  notify:
+    - authenticate as rods user with default password
+    - set the password for the native auto rods user
+    - authenticate as rods user with updated password
+    - create the anonymous user

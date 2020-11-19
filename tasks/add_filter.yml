@@ -1,0 +1,35 @@
+---
+
+- name: install needed prog jq
+  yum:
+    state: present
+    name:
+      - jq
+
+- name: add rulebase in server-config
+  shell: >
+    cat "{{ CHANGE_DIR }}/{{ CONFIG_FILE }}" |
+    jq '.plugin_configuration.rule_engines[.plugin_configuration.rule_engines |
+    to_entries | .[] |
+    select(.value.plugin_name == "irods_rule_engine_plugin-irods_rule_language") |
+    .key].plugin_specific_configuration.re_rulebase_set |= (.+ ["cubi"] | unique )'
+    > "{{ CHANGE_DIR }}/{{ CHECK_FILE }}" ;
+    mv "{{ CHANGE_DIR }}/{{ CONFIG_FILE }}"
+    "{{ CHANGE_DIR }}/{{ CONFIG_FILE }}".$(date +%Y%m%d%H%M).bak;
+    cp "{{ CHANGE_DIR }}/{{ CHECK_FILE }}" "{{ CHANGE_DIR }}/{{ CONFIG_FILE }}"
+  args:
+    creates: "{{ CHANGE_DIR }}/{{ CHECK_FILE }}"
+  vars:
+    CONFIG_FILE: server_config.json
+    CHECK_FILE: ".ansible_{{ CONFIG_FILE }}.{{ role_name }}.{{ CHECKVERSION }}"
+    CHANGE_DIR: /etc/irods
+    CHECKVERSION: v01
+  become: yes
+  become_user: "{{ irods_account_user }}"
+
+- name: the cubi-rules
+  copy:
+    src: cubi.re
+    dest: "/etc/irods/"
+    owner: "{{ irods_account_user }}"
+    group: "{{ irods_account_user }}"
