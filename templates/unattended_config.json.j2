@@ -127,6 +127,11 @@
         "irods_server_control_plane_encryption_num_hash_rounds": 16,
         "irods_server_control_plane_key": "{{ irods_control_plane_key }}",
         "irods_server_control_plane_port": 1248,
+
+        {% if irods_ssl_ca_cert_path|default(false) %}
+        "irods_ssl_ca_certificate_file": "{{ irods_ssl_ca_cert_path }}",
+        {% endif %}
+
         "irods_ssl_certificate_chain_file": "/etc/irods/server.crt",
         "irods_ssl_certificate_key_file": "/etc/irods/server.key",
         "irods_ssl_dh_params_file": "/etc/irods/dhparams.pem",

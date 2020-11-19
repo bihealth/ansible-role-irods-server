@@ -28,6 +28,11 @@
   {# "irods_ssl_certificate_key_file": "/etc/irods/maf-icat1-loc.key", #}
   "irods_ssl_certificate_key_file": "/etc/irods/server.key",
   "irods_ssl_dh_params_file": "/etc/irods/dhparams.pem",
+
+  {% if irods_ssl_ca_cert_path|default(false) %}
+  "irods_ssl_ca_certificate_file": "{{ irods_ssl_ca_cert_path }}",
+  {% endif %}
+
   "irods_ssl_verify_server": "{{ irods_service_account_irods_ssl_verify_server }}",
   "irods_transfer_buffer_size_for_parallel_transfer_in_megabytes": 4,
   "irods_user_name": "rods",
