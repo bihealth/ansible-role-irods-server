@@ -115,6 +115,7 @@
     group: "{{ irods_account_user }}"
     mode: 0644
     lstrip_blocks: 'yes'
+
 - name: create /root/.irods
   file:
     path: /root/.irods

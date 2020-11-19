@@ -35,7 +35,7 @@
         "default_dir_mode": "0750",
         "default_file_mode": "0600",
         "default_hash_scheme": "MD5",
-        "default_resource_name": "{{ inventory_hostname }}_demoResc",
+        "default_resource_name": "{{ inventory_hostname.split('.')[0] }}_demoResc",
         "environment_variables": {
             "IRODS_DATABASE_USER_PASSWORD_SALT": "{{ irods_password_salt }}"
         },
