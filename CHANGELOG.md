@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.0
+
+- Greatly refactoring, includes SSL config now.
+
 ## v0.1.2
 
 - Fixing login after updating `rods` password on installation.
