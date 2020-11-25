@@ -107,7 +107,7 @@
     group: "{{ irods_account_user }}"
     mode: 0755
 
-- name: create irods environment JSON for root
+- name: create irods environment JSON for irods service user
   template:
     src: environment.json.j2
     dest: /var/lib/irods/.irods/irods_environment.json
@@ -136,3 +136,24 @@
     - set the password for the native auto rods user
     - authenticate as rods user with updated password
     - create the anonymous user
+
+- name: flush handlers to create users
+  meta: flush_handlers
+
+- name: pre-create some users without password for PAM
+  become: true
+  become_user: irods
+  shell: |
+    set -euo pipefail
+
+    if iadmin lu "{{ irods_server_item }}" | grep "No rows found" >/dev/null; then
+      iadmin mkuser "{{ irods_server_item }}" rodsuser
+      echo "user created"
+    fi
+  register: irods_server_res
+  changed_when: '"user created" in irods_server_res.stdout'
+  args:
+    executable: bash
+  loop_control:
+    loop_var: irods_server_item
+  loop: "{{ irods_precreate_pam_users }}"

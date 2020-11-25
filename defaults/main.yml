@@ -31,6 +31,9 @@ irods_create_anonymous_user: false
 # Set to true for self-signed certificates.
 irods_cert_trues: false
 
+# An optional list of user names to create without password; for PAM.
+irods_precreate_pam_users: []
+
 # Other Settings (the defaults are sensible for most cases) ---------------------------------------
 
 # Certificate name (via bihealth.ssl_certs).
