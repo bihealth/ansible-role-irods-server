@@ -3,7 +3,6 @@
 - name: create irods system-group
   group:
     name: irods
-    gid: 993
 
 - name: create irods system-user
   user:
@@ -11,7 +10,6 @@
     comment: iRODS Administrator
     home: /var/lib/irods
     group: irods
-    uid: 996
     shell: /bin/bash
 
 - name: create server configuration template JSON file
